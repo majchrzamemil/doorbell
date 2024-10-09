@@ -11,6 +11,7 @@ const GPIO_SENSOR: u8 = 23;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    println!("initing doorbel");
     let app = Router::new().route("/doorbell", any(ws_handler));
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     Ok(axum::serve(

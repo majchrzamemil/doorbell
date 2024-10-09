@@ -1,0 +1,14 @@
+[package]
+name = "client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+features = "0.10.0"
+rusty_audio = "1.4.1"
+tokio-tungstenite = "0.24.0"
+tokio = { version = "1.0", features = ["full"] }
+futures-util = { version = "0.3", default-features = false, features = [
+  "sink",
+  "std",
+] }

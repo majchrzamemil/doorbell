@@ -1,0 +1,3 @@
+[workspace]
+reslolver = "2"
+members = ["doorbell", "client"]

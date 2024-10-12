@@ -29,9 +29,22 @@ async fn spawn_client() {
         "startup",
         "/Users/emil.majchrzak/Documents/sound_test/doorbell-223669.mp3",
     );
-    while let Some(Ok(_)) = receiver.next().await {
-        println!("Tosia!!!!");
-        audio.play("startup");
-        audio.wait();
+    while let Some(Ok(msg)) = receiver.next().await {
+        match msg {
+            tokio_tungstenite::tungstenite::Message::Binary(vec) => match &vec[..] {
+                [0] => {
+                    println!("Tosia!!!!");
+                    audio.play("startup");
+                    audio.wait();
+                }
+                _ => {
+                    println!("error");
+                }
+            },
+            tokio_tungstenite::tungstenite::Message::Close(_) => {
+                println!("closed connection");
+            }
+            _ => panic!("unexpected message"),
+        }
     }
 }

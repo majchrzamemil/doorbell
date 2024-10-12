@@ -31,7 +31,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 format!("{}=debug,tower_http=debug", env!("CARGO_CRATE_NAME")).into()
             }),
         )
-        .with(tracing_subscriber::fmt::layer())
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_line_number(true)
+                .with_file(true)
+                .with_thread_names(true)
+                .with_thread_ids(true),
+        )
         .init();
 
     let gpio_state = Arc::new(AtomicBool::new(false));
@@ -71,6 +77,8 @@ fn gpio_hander(state: Arc<AtomicBool>) -> Result<(), io::Error> {
         return Ok(());
     };
     let pin = pin.into_input_pullup();
+    tracing::info!("Successfuly initialized GPIO pin {GPIO_SENSOR}");
+
     loop {
         if pin.read() == Level::Low {
             if !state.load(Ordering::Acquire) {

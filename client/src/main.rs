@@ -44,6 +44,9 @@ async fn spawn_client() {
             tokio_tungstenite::tungstenite::Message::Close(_) => {
                 println!("closed connection");
             }
+            tokio_tungstenite::tungstenite::Message::Ping(_) => {
+                //don't panic just ignore
+            }
             _ => panic!("unexpected message"),
         }
     }

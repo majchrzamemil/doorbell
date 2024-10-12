@@ -43,7 +43,10 @@ async fn ws_handler(
     ws: axum::extract::WebSocketUpgrade,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_socket(socket, addr))
+    tracing::info!("WS handler");
+    let upgrade = ws.on_upgrade(move |socket| handle_socket(socket, addr));
+    tracing::info!("upgrade finished");
+    upgrade
 }
 
 async fn handle_socket(mut socket: axum::extract::ws::WebSocket, who: SocketAddr) {
@@ -71,8 +74,16 @@ async fn handle_socket(mut socket: axum::extract::ws::WebSocket, who: SocketAddr
             {
                 break;
             }
+            tracing::info!("Message successfuly sent");
             thread::sleep(Duration::from_millis(2500));
         } else {
+            if send_message(&mut socket, Message::Ping(vec![]))
+                .await
+                .is_none()
+            {
+                tracing::warn!("Client disconnected");
+                break;
+            }
             thread::sleep(Duration::from_millis(500));
         }
     }
@@ -80,12 +91,9 @@ async fn handle_socket(mut socket: axum::extract::ws::WebSocket, who: SocketAddr
 }
 
 async fn send_message(socket: &mut axum::extract::ws::WebSocket, msg: Message) -> Option<()> {
-    match socket.send(msg).await {
-        Ok(_) => tracing::info!("message sent successfuly"),
-        Err(e) => {
-            tracing::error!(err = ?e, "Encountered error while sending to socket");
-            return None;
-        }
+    if let Err(e) = socket.send(msg).await {
+        tracing::error!(err = ?e, "Encountered error while sending to socket");
+        return None;
     }
     Some(())
 }

@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
     tracing::debug!("listening on {}", listener.local_addr()?);
 
-    futures::future::try_join_all(vec![
+    let res = futures::future::try_join_all(vec![
         tokio::spawn(async move {
             axum::serve(
                 listener,
@@ -62,7 +62,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }),
         tokio::spawn(async move { gpio_hander(gpio_state.clone()) }),
     ])
-    .await?;
+    .await;
+
+    tracing::info!("Finished");
+    match res {
+        Ok(results) => {
+            for result in results.into_iter() {
+                if let Err(e) = result {
+                    tracing::error!(error = %e);
+                }
+            }
+        }
+        Err(err) => tracing::error!(error = %err),
+    }
     Ok(())
 }
 

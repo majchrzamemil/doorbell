@@ -132,7 +132,7 @@ async fn handle_socket(
                 tracing::warn!("Client disconnected");
                 break;
             }
-            thread::sleep(Duration::from_millis(500));
+            thread::sleep(Duration::from_millis(1000));
         }
     }
     tracing::info!("Closing connection with: {who}");

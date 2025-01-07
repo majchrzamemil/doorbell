@@ -1,6 +1,6 @@
 use std::{thread, time::Duration};
 
-use futures_util::StreamExt;
+use futures_util::{SinkExt, StreamExt};
 use rusty_audio::Audio;
 use tokio_tungstenite::connect_async;
 
@@ -15,7 +15,7 @@ async fn spawn_client() {
     let mut reconnection_count: usize = 0;
     while reconnection_count < 1000 {
         println!("Connecting, reconnection_count :{reconnection_count}");
-        let ws_stream = match connect_async(SERVER).await {
+        let mut ws_stream = match connect_async(SERVER).await {
             Ok((stream, response)) => {
                 println!("Handshake for client  has been completed");
                 println!("Server response was {response:?}");
@@ -30,11 +30,12 @@ async fn spawn_client() {
             }
         };
 
-        let (_, mut receiver) = ws_stream.split();
+        let resp = ws_stream.send(tokio_tungstenite::tungstenite::Message::Ping(vec![])).await;
+        println!("Resp for ping: {:?}", resp);
 
         let mut audio = Audio::new();
         audio.add("startup", "./client/doorbell-223669.mp3");
-        while let Some(Ok(msg)) = receiver.next().await {
+        while let Some(Ok(msg)) = ws_stream.next().await {
             match msg {
                 tokio_tungstenite::tungstenite::Message::Binary(vec) => match &vec[..] {
                     [0] => {
